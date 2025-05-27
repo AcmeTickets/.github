@@ -31,11 +31,11 @@ jobs:
         run: |
           result=$(az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "notfound")
           echo "result=$result" >> $GITHUB_OUTPUT
-
+#TODO: this is super brittle and needs to be improved
       - name: Create Azure Container App if not exists
         if: steps.check_aca.outputs.result == 'notfound'
         run: |
-          if [ "${{ inputs.container_app_name }}" = "acmetickets2025-message" ]; then
+          if [ "${{ inputs.container_app_name }}" = "acmetickets-message" ]; then
             az containerapp create \
               --name "${{ inputs.container_app_name }}" \
               --resource-group "$RESOURCE_GROUP" \
@@ -56,7 +56,7 @@ jobs:
       - name: Update Azure Container App if exists
         if: steps.check_aca.outputs.result != 'notfound'
         run: |
-          if [ "${{ inputs.container_app_name }}" = "acmetickets2025-message" ]; then
+          if [ "${{ inputs.container_app_name }}" = "acmetickets-message" ]; then
             az containerapp update \
               --name "${{ inputs.container_app_name }}" \
               --resource-group "$RESOURCE_GROUP" \
