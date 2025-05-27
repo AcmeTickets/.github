@@ -1,4 +1,6 @@
 name: Deploy App to Azure Container App
+#TODO: Pass in the resouce group as an input
+#TODO: pass in the port as an input
 
 on:
   workflow_call:
@@ -11,7 +13,7 @@ on:
         type: string
 
 env:
-  RESOURCE_GROUP: acmetickets_rg
+  RESOURCE_GROUP: acmetickets_rg 
   CONTAINERAPPS_ENVIRONMENT: acmeticketsacadev
   AZURE_LOCATION: eastus
 
