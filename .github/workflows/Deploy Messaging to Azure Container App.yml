@@ -1,4 +1,4 @@
-name: Deploy App to Azure Container App
+name: Deploy Messaging to Azure Container App
 #TODO: Pass in the resouce group as an input
 #TODO: pass in the port as an input
 
@@ -31,37 +31,16 @@ jobs:
         run: |
           result=$(az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "notfound")
           echo "result=$result" >> $GITHUB_OUTPUT
-#TODO: this is super brittle and needs to be improved
-      - name: Create Azure Container App if not exists
-        if: steps.check_aca.outputs.result == 'notfound'
-        run: |
-          if [ "${{ inputs.container_app_name }}" = "acmetickets-message" ]; then
-            az containerapp create \
-              --name "${{ inputs.container_app_name }}" \
-              --resource-group "$RESOURCE_GROUP" \
-              --environment "$CONTAINERAPPS_ENVIRONMENT" \
-              --image "${{ inputs.image_tag }}" \
-              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
-          else
-            az containerapp create \
-              --name "${{ inputs.container_app_name }}" \
-              --resource-group "$RESOURCE_GROUP" \
-              --environment "$CONTAINERAPPS_ENVIRONMENT" \
-              --image "${{ inputs.image_tag }}" \
-              --ingress external \
-              --target-port 5271 \
-              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
-          fi
 
-      - name: Update Azure Container App if exists
-        if: steps.check_aca.outputs.result != 'notfound'
+      - name: Deploy or Update a Messaging App
         run: |
-          if [ "${{ inputs.container_app_name }}" = "acmetickets-message" ]; then
-            az containerapp update \
+          if [ "${{ steps.check_aca.outputs.result }}" = "notfound" ]; then
+            az containerapp create \
               --name "${{ inputs.container_app_name }}" \
               --resource-group "$RESOURCE_GROUP" \
+              --environment "$CONTAINERAPPS_ENVIRONMENT" \
               --image "${{ inputs.image_tag }}" \
-              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
               --name "${{ inputs.container_app_name }}" \

@@ -1,0 +1,52 @@
+name: Deploy API to Azure Container App
+#TODO: Pass in the resouce group as an input
+#TODO: pass in the port as an input
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      container_app_name:
+        required: true
+        type: string
+
+env:
+  RESOURCE_GROUP: acmetickets_rg 
+  CONTAINERAPPS_ENVIRONMENT: acmeticketsacadev
+  AZURE_LOCATION: eastus
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check if Azure Container App exists
+        id: check_aca
+        run: |
+          result=$(az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "notfound")
+          echo "result=$result" >> $GITHUB_OUTPUT
+
+      - name: Deploy or Update an API App
+        run: |
+          if [ "${{ steps.check_aca.outputs.result }}" = "notfound" ]; then
+            az containerapp create \
+              --name "${{ inputs.container_app_name }}" \
+              --resource-group "$RESOURCE_GROUP" \
+              --environment "$CONTAINERAPPS_ENVIRONMENT" \
+              --image "${{ inputs.image_tag }}" \
+              --ingress external \
+              --target-port 5271 \
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+          else
+            az containerapp update \
+              --name "${{ inputs.container_app_name }}" \
+              --resource-group "$RESOURCE_GROUP" \
+              --image "${{ inputs.image_tag }}" \
+              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+          fi
