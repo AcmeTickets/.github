@@ -66,8 +66,8 @@ jobs:
               --image "${{ inputs.image_tag }}" \
               --ingress external \
               --target-port 5271 \
-              --registry-server ghcr.io \
-              --registry-username x-access-token \
+              --registry-server "ghcr.io" \
+              --registry-username "x-access-token" \
               --registry-password "${{ steps.app-token.outputs.token }}" \
               --env-vars "ASPNETCORE_ENVIRONMENT=Development" "ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}"
           else
@@ -75,8 +75,8 @@ jobs:
               --name "${{ inputs.container_app_name }}" \
               --resource-group "$RESOURCE_GROUP" \
               --image "${{ inputs.image_tag }}" \
-              --registry-server ghcr.io \
-              --registry-username x-access-token \
+              --registry-server "ghcr.io" \
+              --registry-username "x-access-token" \
               --registry-password "${{ steps.app-token.outputs.token }}" \
               --env-vars "ASPNETCORE_ENVIRONMENT=Development" "ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}"
           fi
