@@ -83,7 +83,7 @@ jobs:
               --registry-server "ghcr.io" \
               --registry-username "x-access-token" \
               --registry-password "$GHCR_TOKEN" \
-              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
               --name "${{ inputs.container_app_name }}" \
