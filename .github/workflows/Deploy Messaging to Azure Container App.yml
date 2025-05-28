@@ -33,17 +33,6 @@ jobs:
           app_id: ${{ secrets.GH_APP_ID }}
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Set Azure Container App Registry Credentials
-        env:
-          GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          az containerapp registry set \
-            --name "${{ inputs.container_app_name }}" \
-            --resource-group "$RESOURCE_GROUP" \
-            --server ghcr.io \
-            --username x-access-token \
-            --password "$env:GHCR_TOKEN"
-
       - name: Check if Azure Container App exists
         id: check_aca
         run: |
@@ -51,6 +40,8 @@ jobs:
           echo "result=$result" >> $GITHUB_OUTPUT
 
       - name: Deploy or Update a Messaging App
+        env:
+          GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if [ "${{ steps.check_aca.outputs.result }}" = "notfound" ]; then
             az containerapp create \
@@ -58,6 +49,9 @@ jobs:
               --resource-group "$RESOURCE_GROUP" \
               --environment "$CONTAINERAPPS_ENVIRONMENT" \
               --image "${{ inputs.image_tag }}" \
+              --registry-server ghcr.io \
+              --registry-username x-access-token \
+              --registry-password "$env:GHCR_TOKEN" \
               --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
