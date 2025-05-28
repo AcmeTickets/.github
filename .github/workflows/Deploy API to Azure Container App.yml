@@ -82,15 +82,12 @@ jobs:
               --target-port 5271 \
               --registry-server "ghcr.io" \
               --registry-username "x-access-token" \
-              --registry-password "${{ steps.app-token.outputs.token }}" \
-              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}
+              --registry-password "$GHCR_TOKEN" \
+              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
               --name "${{ inputs.container_app_name }}" \
               --resource-group "$RESOURCE_GROUP" \
               --image "${{ inputs.image_tag }}" \
-              --registry-server "ghcr.io" \
-              --registry-username "x-access-token" \
-              --registry-password "${{ steps.app-token.outputs.token }}" \
-              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}
+              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           fi
