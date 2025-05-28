@@ -43,11 +43,11 @@ jobs:
         env:
           GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          az containerapp registry set `
-            --name "${{ inputs.container_app_name }}" `
-            --resource-group "$RESOURCE_GROUP" `
-            --server ghcr.io `
-            --username x-access-token `
+          az containerapp registry set \
+            --name "${{ inputs.container_app_name }}" \
+            --resource-group "$RESOURCE_GROUP" \
+            --server ghcr.io \
+            --username x-access-token \
             --password "$env:GHCR_TOKEN"
 
       - name: Deploy or Update an API App
