@@ -43,6 +43,10 @@ jobs:
           app_id: ${{ secrets.GH_APP_ID }}
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
+      - name: Output GHCR Token
+        run: |
+          echo "GHCR Token: ${{ steps.app-token.outputs.token }}"
+
       - name: Check GHCR Token Access
         env:
           GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
