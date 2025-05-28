@@ -53,7 +53,7 @@ jobs:
               --target-port 5271 \
               --registry-server ghcr.io \
               --registry-username x-access-token \
-              --registry-password "$env:GHCR_TOKEN" \
+              --registry-password "$GHCR_TOKEN" \
               --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
