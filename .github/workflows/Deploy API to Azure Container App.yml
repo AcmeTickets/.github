@@ -54,6 +54,20 @@ jobs:
           echo "Checking access to GHCR repository..."
           curl -H "Authorization: Bearer $GHCR_TOKEN" https://ghcr.io/v2/acmetickets/acmetickets-api/tags/list
           
+      - name: Debug shell args
+        run: |
+          echo az containerapp create \
+              --name "${{ inputs.container_app_name }}" \
+              --resource-group "$RESOURCE_GROUP" \
+              --environment "$CONTAINERAPPS_ENVIRONMENT" \
+              --image "${{ inputs.image_tag }}" \
+              --ingress external \
+              --target-port 5271 \
+              --registry-server "ghcr.io" \
+              --registry-username "x-access-token" \
+              --registry-password "${{ steps.app-token.outputs.token }}" \
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}
+
       - name: Deploy or Update an API App
         env:
           GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -69,7 +83,7 @@ jobs:
               --registry-server "ghcr.io" \
               --registry-username "x-access-token" \
               --registry-password "${{ steps.app-token.outputs.token }}" \
-              --env-vars "ASPNETCORE_ENVIRONMENT=Development" "ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}"
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}
           else
             az containerapp update \
               --name "${{ inputs.container_app_name }}" \
@@ -78,5 +92,5 @@ jobs:
               --registry-server "ghcr.io" \
               --registry-username "x-access-token" \
               --registry-password "${{ steps.app-token.outputs.token }}" \
-              --env-vars "ASPNETCORE_ENVIRONMENT=Development" "ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}"
+              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus=${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}
           fi
