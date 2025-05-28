@@ -51,6 +51,8 @@ jobs:
             --password "$env:GHCR_TOKEN"
 
       - name: Deploy or Update an API App
+        env:
+          GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if [ "${{ steps.check_aca.outputs.result }}" = "notfound" ]; then
             az containerapp create \
@@ -60,6 +62,9 @@ jobs:
               --image "${{ inputs.image_tag }}" \
               --ingress external \
               --target-port 5271 \
+              --registry-server ghcr.io \
+              --registry-username x-access-token \
+              --registry-password "$env:GHCR_TOKEN" \
               --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
           else
             az containerapp update \
