@@ -30,40 +30,31 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Get GitHub App Token
-        id: app-token
-        uses: tibdex/github-app-token@v2
-        with:
-          app_id: ${{ secrets.GH_APP_ID }}
-          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Check if Azure Container App exists
         id: check_aca
         run: |
           result=$(az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "notfound")
           echo "result=$result" >> $GITHUB_OUTPUT
 
-      - name: Deploy or Update a Messaging App
+      - name: Create Messaging App
+        if: ${{ steps.check_aca.outputs.result == 'notfound' }}
         env:
           GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          if [ "${{ steps.check_aca.outputs.result }}" = "notfound" ]; then
-            az containerapp create \
-              --name "${{ inputs.container_app_name }}" \
-              --resource-group "$RESOURCE_GROUP" \
-              --environment "$CONTAINERAPPS_ENVIRONMENT" \
-              --image "${{ inputs.image_tag }}" \
-              --registry-server ghcr.io \
-              --registry-username x-access-token \
-              --registry-password ${{ steps.app-token.outputs.token }} \
-              --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
-          else
-            az containerapp update \
-              --name "${{ inputs.container_app_name }}" \
-              --resource-group "$RESOURCE_GROUP" \
-              --image "${{ inputs.image_tag }}" \
-              --registry-server ghcr.io \
-              --registry-username x-access-token \
-              --registry-password ${{ steps.app-token.outputs.token }} \
-              --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
-          fi
+          az containerapp create \
+            --name "${{ inputs.container_app_name }}" \
+            --resource-group "$RESOURCE_GROUP" \
+            --environment "$CONTAINERAPPS_ENVIRONMENT" \
+            --image "${{ inputs.image_tag }}" \
+            --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+
+      - name: Update Messaging App
+        if: ${{ steps.check_aca.outputs.result != 'notfound' }}
+        env:
+          GHCR_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          az containerapp update \
+            --name "${{ inputs.container_app_name }}" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "${{ inputs.image_tag }}" \
+            --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
