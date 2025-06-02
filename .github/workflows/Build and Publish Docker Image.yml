@@ -31,23 +31,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-            dotnet-version: '9.0.x'
+      # - name: Setup .NET
+      #   uses: actions/setup-dotnet@v4
+      #   with:
+      #       dotnet-version: '9.0.x'
 
-      - name: Remove existing GitHub Packages source if present
-        run: |
-          dotnet nuget remove source github || true
+      # - name: Build
+      #   run: dotnet build --configuration Release ${{ inputs.project_path }}
 
-      - name: Add GitHub Packages source
-        run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.NUGET_PAT }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/AcmeTickets/index.json"
-
-      - name: Build
-        run: dotnet build --configuration Release ${{ inputs.project_path }}
-
-      - name: Publish
-        run: dotnet publish --configuration Release --output ./publish ${{ inputs.project_path }}
+      # - name: Publish
+      #   run: dotnet publish --configuration Release --output ./publish ${{ inputs.project_path }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -59,8 +52,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # - name: Build Docker image
+      #   run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} -f ${{ inputs.dockerfile_path }} .
+
       - name: Build Docker image
-        run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} -f ${{ inputs.dockerfile_path }} .
+        run: |
+          docker build \
+            --build-arg GITHUB_TOKEN=${{ secrets.NUGET_PAT }} \
+            --build-arg GITHUB_USERNAME=${{ github.actor }} \
+            -t ${{ inputs.image_name }}:${{ github.sha }} \
+            -f ${{ inputs.dockerfile_path }} .
 
       - name: Push Docker image to GitHub Container Registry
         id: push_image
