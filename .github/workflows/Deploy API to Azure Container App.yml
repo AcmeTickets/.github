@@ -11,6 +11,9 @@ on:
       container_app_name:
         required: true
         type: string
+      target_port:
+        required: true
+        type: number
 
 env:
   RESOURCE_GROUP: acmetickets_rg 
@@ -45,7 +48,7 @@ jobs:
             --environment "$CONTAINERAPPS_ENVIRONMENT" \
             --image "${{ inputs.image_tag }}" \
             --ingress external \
-            --target-port 5271 \
+            --target-port ${{ inputs.target_port }} \
             --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
 
       - name: Update API App
