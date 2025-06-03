@@ -16,6 +16,9 @@ on:
       image_name:
         required: true
         type: string
+      target_port:
+        required: false
+        type: number
     outputs:
       image_tag:
         description: 'The built image tag'
@@ -52,10 +55,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Build Docker image
-      #   run: docker build -t ${{ inputs.image_name }}:${{ github.sha }} -f ${{ inputs.dockerfile_path }} .
+      - name: Build Docker image with port
+        if: ${{ inputs.target_port != '' }}
+        run: |
+          docker build \
+            --build-arg PORT=${{ inputs.target_port }} \
+            --build-arg GITHUB_TOKEN=${{ secrets.NUGET_PAT }} \
+            --build-arg GITHUB_USERNAME=${{ github.actor }} \
+            -t ${{ inputs.image_name }}:${{ github.sha }} \
+            -f ${{ inputs.dockerfile_path }} .
 
-      - name: Build Docker image
+      - name: Build Docker image without port
+        if: ${{ inputs.target_port == '' }}
         run: |
           docker build \
             --build-arg GITHUB_TOKEN=${{ secrets.NUGET_PAT }} \
