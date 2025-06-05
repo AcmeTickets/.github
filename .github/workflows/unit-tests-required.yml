@@ -31,7 +31,7 @@ jobs:
 
     - name: Remove existing GitHub NuGet source
       run: dotnet nuget remove source github || true
-      
+
     - name: Add GitHub NuGet source with GitHub Token
       run: dotnet nuget add source https://nuget.pkg.github.com/AcmeTickets/index.json --name github --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
 
@@ -40,6 +40,9 @@ jobs:
 
     - name: Build solution
       run: dotnet build --configuration Release --no-restore
+
+    - name: List test output
+      run: ls -R src/Test.UnitTests/bin/Release/net9.0
 
     - name: Run unit tests
       run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx" --results-directory "TestResults"
