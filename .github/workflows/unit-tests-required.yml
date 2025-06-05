@@ -41,6 +41,9 @@ jobs:
     - name: Build solution
       run: dotnet build --configuration Release --no-restore
 
+    - name: Print working directory
+      run: pwd
+
     - name: List test output
       run: ls -R src/Test.UnitTests/bin/Release/net9.0
 
