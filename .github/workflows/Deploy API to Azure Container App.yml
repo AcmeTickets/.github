@@ -1,6 +1,6 @@
 name: Deploy API to Azure Container App
 #TODO: Pass in the resouce group as an input
-#TODO: pass in the port as an input
+
 
 on:
   workflow_call:
@@ -18,7 +18,7 @@ on:
 env:
   RESOURCE_GROUP: acmetickets_rg 
   CONTAINERAPPS_ENVIRONMENT: acmeticketsacadev
-  AZURE_LOCATION: eastus
+  AZURE_LOCATION: eastus2
 
 jobs:
   deploy-app:
@@ -39,6 +39,30 @@ jobs:
           result=$(az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "notfound")
           echo "result=$result" >> $GITHUB_OUTPUT
 
+      - name: Assign Managed Identity to Container App
+        run: |
+          az containerapp identity assign \
+            --name "${{ inputs.container_app_name }}" \
+            --resource-group "$RESOURCE_GROUP"
+
+      - name: Get Managed Identity Principal ID
+        id: get_mi
+        run: |
+          $principalId = az containerapp show --name "${{ inputs.container_app_name }}" --resource-group "$RESOURCE_GROUP" --query identity.principalId -o tsv
+          echo "principalId=$principalId" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Grant Service Bus Data Sender Role
+        run: |
+          az role assignment create --assignee $env:principalId --role "Azure Service Bus Data Sender" --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ServiceBus/namespaces/acmeticketsasb"
+
+      - name: Grant Service Bus Data Receiver Role
+        run: |
+          az role assignment create --assignee $env:principalId --role "Azure Service Bus Data Receiver" --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ServiceBus/namespaces/acmeticketsasb"
+
+      - name: Grant Cosmos DB Built-in Data Contributor Role
+        run: |
+          az role assignment create --assignee $env:principalId --role "Cosmos DB Built-in Data Contributor" --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.DocumentDB/databaseAccounts/eventmanagementdb"
+
       - name: Create API App
         if: ${{ steps.check_aca.outputs.result == 'notfound' }}
         run: |
@@ -49,7 +73,7 @@ jobs:
             --image "${{ inputs.image_tag }}" \
             --ingress external \
             --target-port ${{ inputs.target_port }} \
-            --env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+            --env-vars ASPNETCORE_ENVIRONMENT=Development SERVICEBUS_NAMESPACE=acmeticketsasb COSMOSDB_ACCOUNT=eventmanagementdb
 
       - name: Update API App
         if: ${{ steps.check_aca.outputs.result != 'notfound' }}
@@ -58,4 +82,4 @@ jobs:
             --name "${{ inputs.container_app_name }}" \
             --resource-group "$RESOURCE_GROUP" \
             --image "${{ inputs.image_tag }}" \
-            --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+            --set-env-vars ASPNETCORE_ENVIRONMENT=Development SERVICEBUS_NAMESPACE=acmeticketsasb COSMOSDB_ACCOUNT=eventmanagementdb
