@@ -16,7 +16,7 @@ permissions:
   id-token: write # Required to fetch an OIDC token for Azure login.
 
 env:
-  RESOURCE_GROUP: acmetickets_rg 
+  RESOURCE_GROUP: acmetickets-rg 
   CONTAINERAPPS_ENVIRONMENT: acmeticketsacadev
   AZURE_LOCATION: eastus2
 
