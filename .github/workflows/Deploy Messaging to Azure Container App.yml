@@ -41,4 +41,4 @@ jobs:
             --name "${{ inputs.container_app_name }}" \
             --resource-group "$RESOURCE_GROUP" \
             --image "${{ inputs.image_tag }}" \
-            --set-env-vars ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__AzureServiceBus='${{ secrets.AZURE_SERVICEBUS_CONNECTION_STRING }}'
+            --set-env-vars ASPNETCORE_ENVIRONMENT=Production AzureServiceBus__FullyQualifiedNamespace=acmeticketsasb.servicebus.windows.net COSMOSDB_ACCOUNT=eventmanagementdb CosmosDb__DatabaseName=EventManagement CosmosDb__ContainerName=Events CosmosDb__AccountEndpoint=https://eventmanagementdb.documents.azure.com:443/
