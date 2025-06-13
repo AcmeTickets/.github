@@ -46,4 +46,4 @@ jobs:
             --probe-liveness-type http \
             --probe-liveness-http-path /healthz \
             --probe-liveness-http-port 8080 \
-            --probe-liveness-http-headers "" \
+            --probe-liveness-http-headers "" 
